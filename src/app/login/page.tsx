@@ -16,8 +16,6 @@ import { Separator } from '@/components/ui/separator';
 import { Chrome, Eye, EyeOff, Loader2, Slack } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-
-// react-hook-form と zod のインポート
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginFormSchema, LoginFormValues } from '@/lib/validation';

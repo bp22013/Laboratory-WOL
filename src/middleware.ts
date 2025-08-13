@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 const isPublicRoute = createRouteMatcher([
     '/login(.*)', // /loginも追加
     '/dashboard',
+    '/setting',
     '/forgot-password(.*)',
     '/sso-callback(.*)', // SSOコールバック
     '/', // ランディングページ（必要に応じて）
