@@ -1,9 +1,8 @@
-/* WOLデバイスのカードコンポーネント */
+/* デバイスの登録フォームコンポーネント */
 
 'use client';
 
 import type React from 'react';
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,90 +16,54 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-
-interface Device {
-    id: string;
-    name: string;
-    macAddress: string;
-    ipAddress: string;
-    description?: string;
-    isOnline?: boolean;
-}
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { DeviceFormValues, deviceSchema } from '@/lib/validation';
+import { type Device } from '@/types/DeviceType';
 
 interface DeviceFormProps {
     device?: Device | null;
-    onSave: (device: Omit<Device, 'id'>) => void;
+    onSave: (device: Omit<Device, 'id'>) => Promise<void> | void;
     onCancel: () => void;
 }
 
-export default function DeviceForm({ device, onSave, onCancel }: DeviceFormProps) {
-    const [formData, setFormData] = useState({
-        name: '',
-        macAddress: '',
-        ipAddress: '',
-        description: '',
+export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<DeviceFormValues>({
+        resolver: zodResolver(deviceSchema),
+        defaultValues: {
+            name: '',
+            macAddress: '',
+            description: '',
+        },
     });
-    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (device) {
-            setFormData({
+            reset({
                 name: device.name,
                 macAddress: device.macAddress,
-                ipAddress: device.ipAddress,
                 description: device.description || '',
             });
         }
-    }, [device]);
+    }, [device, reset]);
 
-    const validateMacAddress = (mac: string) => {
-        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
-        return macRegex.test(mac);
-    };
-
-    const validateIpAddress = (ip: string) => {
-        const ipRegex =
-            /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-        return ipRegex.test(ip);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.name.trim()) {
-            newErrors.name = 'デバイス名は必須です';
-        }
-
-        if (!formData.macAddress.trim()) {
-            newErrors.macAddress = 'MACアドレスは必須です';
-        } else if (!validateMacAddress(formData.macAddress)) {
-            newErrors.macAddress = 'MACアドレスの形式が正しくありません (例: 00:11:22:33:44:55)';
-        }
-
-        if (!formData.ipAddress.trim()) {
-            newErrors.ipAddress = 'IPアドレスは必須です';
-        } else if (!validateIpAddress(formData.ipAddress)) {
-            newErrors.ipAddress = 'IPアドレスの形式が正しくありません';
-        }
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length === 0) {
-            onSave({
-                name: formData.name.trim(),
-                macAddress: formData.macAddress.trim().toUpperCase(),
-                ipAddress: formData.ipAddress.trim(),
-                description: formData.description.trim(),
+    const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
+        setIsLoading(true);
+        try {
+            await onSave({
+                name: data.name.trim(),
+                macAddress: data.macAddress.trim().toUpperCase(),
+                description: data.description?.trim() || '',
             });
-        }
-    };
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors((prev) => ({ ...prev, [field]: '' }));
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -114,69 +77,66 @@ export default function DeviceForm({ device, onSave, onCancel }: DeviceFormProps
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    {/* デバイス名 */}
                     <div className="space-y-2">
                         <Label htmlFor="name">デバイス名 *</Label>
                         <Input
                             id="name"
-                            value={formData.name}
-                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            disabled={isLoading}
                             placeholder="例: メインPC"
-                            className={errors.name ? 'border-red-500' : ''}
+                            {...register('name')}
                         />
-                        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-sm text-red-500">{errors.name.message}</p>
+                        )}
                     </div>
 
+                    {/* MACアドレス */}
                     <div className="space-y-2">
                         <Label htmlFor="macAddress">MACアドレス *</Label>
                         <Input
                             id="macAddress"
-                            value={formData.macAddress}
-                            onChange={(e) => handleInputChange('macAddress', e.target.value)}
+                            disabled={isLoading}
                             placeholder="例: 00:11:22:33:44:55"
-                            className={errors.macAddress ? 'border-red-500' : ''}
+                            {...register('macAddress')}
                         />
                         {errors.macAddress && (
-                            <p className="text-sm text-red-500">{errors.macAddress}</p>
+                            <p className="text-sm text-red-500">{errors.macAddress.message}</p>
                         )}
                         <p className="text-xs text-gray-500">
                             コロン(:)またはハイフン(-)区切りで入力してください
                         </p>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="ipAddress">IPアドレス *</Label>
-                        <Input
-                            id="ipAddress"
-                            value={formData.ipAddress}
-                            onChange={(e) => handleInputChange('ipAddress', e.target.value)}
-                            placeholder="例: 192.168.1.100"
-                            className={errors.ipAddress ? 'border-red-500' : ''}
-                        />
-                        {errors.ipAddress && (
-                            <p className="text-sm text-red-500">{errors.ipAddress}</p>
-                        )}
-                    </div>
-
+                    {/* 説明 */}
                     <div className="space-y-2">
                         <Label htmlFor="description">説明（任意）</Label>
                         <Textarea
                             id="description"
-                            value={formData.description}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
+                            disabled={isLoading}
                             placeholder="例: リビングのデスクトップPC"
                             rows={3}
+                            {...register('description')}
                         />
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onCancel}>
+                        <Button
+                            type="button"
+                            className="cursor-pointer"
+                            variant="outline"
+                            onClick={onCancel}
+                            disabled={isLoading}
+                        >
                             キャンセル
                         </Button>
-                        <Button type="submit">{device ? '更新' : '追加'}</Button>
+                        <Button type="submit" disabled={isLoading} className="cursor-pointer">
+                            {isLoading ? '処理中...' : device ? '更新' : '追加'}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     );
-}
+};

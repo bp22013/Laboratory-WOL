@@ -1,4 +1,5 @@
 /* ユーザーの設定ページ */
+
 'use client';
 
 import { UserProfile } from '@clerk/nextjs';
