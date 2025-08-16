@@ -5,6 +5,7 @@
 import type React from 'react';
 
 import { useState, useEffect } from 'react';
+import { NextPage } from 'next';
 import { useRouter } from 'next/navigation';
 import { useSignIn, useAuth } from '@clerk/nextjs';
 import { OAuthStrategy } from '@clerk/types';
@@ -13,14 +14,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Chrome, Eye, EyeOff, Loader2, Slack } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Slack } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginFormSchema, LoginFormValues } from '@/lib/validation';
+import { FcGoogle } from 'react-icons/fc';
 
-export default function LoginPage() {
+const LoginPage: NextPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { signIn, setActive, isLoaded: signInLoaded } = useSignIn();
@@ -32,7 +34,6 @@ export default function LoginPage() {
         register,
         handleSubmit,
         formState: { errors, isValid },
-        getValues, // 現在のフォームの値を取得するために使用
     } = useForm<LoginFormValues>({
         resolver: zodResolver(loginFormSchema),
         defaultValues: {
@@ -54,30 +55,39 @@ export default function LoginPage() {
 
         setIsLoading(true);
 
-        try {
-            const result = await signIn.create({
-                identifier: data.email,
-                password: data.password,
-            });
+        await toast.promise(
+            new Promise<string>(async (reject) => {
+                try {
+                    const result = await signIn.create({
+                        identifier: data.email,
+                        password: data.password,
+                    });
 
-            if (result.status === 'complete') {
-                await setActive({ session: result.createdSessionId });
-                router.push('/dashboard');
-            } else {
-                // 追加の認証が必要な場合（2FA等）
-                console.log('Additional authentication required:', result);
-                toast.error('追加の認証が必要です。');
+                    if (result.status === 'complete') {
+                        await setActive({ session: result.createdSessionId });
+                        router.push('/dashboard');
+                    } else {
+                        // 追加の認証が必要な場合（2FA等）
+                        console.log('Additional authentication required:', result);
+                        reject('追加の認証が必要です。');
+                    }
+                } catch (err: any) {
+                    console.error('Login error:', err);
+                    if (err.errors && err.errors.length > 0) {
+                        reject(err.errors[0].longMessage || '再度ログインしてください。');
+                    } else {
+                        reject('再度ログインしてください。');
+                    }
+                } finally {
+                    setIsLoading(false);
+                }
+            }),
+            {
+                loading: 'ログイン中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
             }
-        } catch (err: any) {
-            console.error('Login error:', err);
-            if (err.errors && err.errors.length > 0) {
-                toast.error(err.errors[0].longMessage || '再度ログインしてください。');
-            } else {
-                toast.error('再度ログインしてください。');
-            }
-        } finally {
-            setIsLoading(false);
-        }
+        );
     };
 
     // ソーシャルメディアを使用したログインのメソッド
@@ -86,22 +96,31 @@ export default function LoginPage() {
 
         setIsLoading(true);
 
-        try {
-            await signIn.authenticateWithRedirect({
-                strategy: provider,
-                redirectUrl: '/sso-callback', // SSO用のコールバックページ
-                redirectUrlComplete: '/dashboard', // 認証完了後のリダイレクト先
-            });
-        } catch (err: any) {
-            console.error('Social login error:', err);
-            // ソーシャルログインのエラーも同様に処理
-            if (err.errors && err.errors.length > 0) {
-                toast.error(err.errors[0].longMessage || '再度ログインしてください。');
-            } else {
-                toast.error('再度ログインしてください。');
+        await toast.promise(
+            new Promise<string>(async (reject) => {
+                try {
+                    await signIn.authenticateWithRedirect({
+                        strategy: provider,
+                        redirectUrl: '/sso-callback', // SSO用のコールバックページ
+                        redirectUrlComplete: '/dashboard', // 認証完了後のリダイレクト先
+                    });
+                } catch (err: any) {
+                    console.error('Social login error:', err);
+                    // ソーシャルログインのエラーも同様に処理
+                    if (err.errors && err.errors.length > 0) {
+                        reject(err.errors[0].longMessage || '再度ログインしてください。');
+                    } else {
+                        reject('再度ログインしてください。');
+                    }
+                    setIsLoading(false);
+                }
+            }),
+            {
+                loading: 'ログイン中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
             }
-            setIsLoading(false);
-        }
+        );
     };
 
     if (!signInLoaded) {
@@ -150,7 +169,7 @@ export default function LoginPage() {
                                     placeholder="パスワードを入力"
                                     {...register('password')}
                                     disabled={isLoading}
-                                    className={errors.password ? 'border-red-500 pr-10' : 'pr-10'} // pr-10を追加してボタンのスペースを確保
+                                    className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                                 />
                                 <Button
                                     type="button"
@@ -167,7 +186,6 @@ export default function LoginPage() {
                                     )}
                                 </Button>
                             </div>
-                            {/* エラーメッセージはrelative親要素の外に移動 */}
                             {errors.password && (
                                 <p className="text-sm text-red-500">{errors.password.message}</p>
                             )}
@@ -207,7 +225,7 @@ export default function LoginPage() {
                             onClick={() => handleSocialLogin('oauth_google')}
                             disabled={isLoading}
                         >
-                            <Chrome className="mr-2 h-4 w-4" />
+                            <FcGoogle className="mr-2 h-4 w-4" />
                             Googleでログイン
                         </Button>
                         <Button
@@ -236,4 +254,6 @@ export default function LoginPage() {
             </Card>
         </div>
     );
-}
+};
+
+export default LoginPage;

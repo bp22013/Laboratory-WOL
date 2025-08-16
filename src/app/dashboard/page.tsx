@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { NextPage } from 'next';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useUser, useAuth } from '@clerk/nextjs';
@@ -15,7 +16,7 @@ import toast from 'react-hot-toast';
 import { Loading, ButtonLoading } from '@/components/ui/loading';
 import { type Device } from '@/types/DeviceType';
 
-export default function Dashboard() {
+const Dashboard: NextPage = () => {
     const [devices, setDevices] = useState<Device[]>([]);
     const [showDeviceForm, setShowDeviceForm] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
@@ -42,8 +43,7 @@ export default function Dashboard() {
                     setDevices(data);
                 }
             } catch (error) {
-                console.error(error);
-                toast.error('デバイス情報の取得に失敗しました');
+                toast.error('再度ログインしてください');
             }
         })();
     }, []);
@@ -218,4 +218,6 @@ export default function Dashboard() {
             )}
         </div>
     );
-}
+};
+
+export default Dashboard;

@@ -5,7 +5,7 @@ import { handle } from 'hono/vercel';
 import { cors } from 'hono/cors';
 import { csrf } from 'hono/csrf';
 import { db } from '@/db/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql, asc } from 'drizzle-orm';
 import { wolQueue, devices } from '@/db/schema';
 
 type Bindings = {
@@ -14,8 +14,6 @@ type Bindings = {
     AUTH_SECRET?: string; // エージェントへの認証用シークレット
 };
 
-// Hono.jsアプリケーションインスタンスの作成とベースパスの設定
-// Next.js API Routeとして使用するため、通常 '/api' がベースパスになることが多いです。
 const app = new Hono<{ Bindings: Bindings }>().basePath('/api');
 
 // CORS設定

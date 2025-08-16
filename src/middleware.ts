@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
     '/login(.*)', // /loginも追加
     '/dashboard',
     '/setting',
+    '/sign-up',
     '/forgot-password(.*)',
     '/sso-callback(.*)', // SSOコールバック
     '/', // ランディングページ（必要に応じて）

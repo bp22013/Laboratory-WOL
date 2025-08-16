@@ -1,11 +1,12 @@
-/* ナビゲーションバーのコンポーネント */
+/* ナビゲーションバーのコンポーネント - toast.promise対応サインアウト */
 
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useUser, useAuth } from '@clerk/nextjs';
-import { Home, LogOut, Monitor, Settings } from 'lucide-react';
+import { Home, LogOut, Monitor, Settings, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -15,11 +16,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import toast from 'react-hot-toast';
 
 export const Navbar = () => {
     const router = useRouter();
-    const { signOut } = useAuth();
-    const { user } = useUser();
+    const { signOut, isLoaded } = useAuth();
+    const { user, isLoaded: userLoaded } = useUser();
+    const [isSigningOut, setIsSigningOut] = useState(false);
 
     const getUserInitials = (user: any): string => {
         if (user?.firstName && user?.lastName) {
@@ -57,12 +60,59 @@ export const Navbar = () => {
         return 'ユーザー';
     };
 
-    const handleLogout = () => {
-        signOut(() => router.push('/login'));
+    // ログアウトの処理
+    const handleLogout = async () => {
+        if (isSigningOut || !isLoaded) return;
+
+        setIsSigningOut(true);
+
+        await toast.promise(
+            new Promise<string>(async (resolve, reject) => {
+                try {
+                    await signOut(() => {
+                        // サインアウト完了後のコールバック
+                        router.push('/login');
+                    });
+                    resolve('ログアウトしました');
+                } catch (error: any) {
+                    console.error('Sign out error:', error);
+                    reject('ログアウトに失敗しました');
+                } finally {
+                    setIsSigningOut(false);
+                }
+            }),
+            {
+                loading: 'ログアウト中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
+            }
+        );
     };
+
+    // Clerkのロード中またはユーザー情報が未ロードの場合
+    if (!isLoaded || !userLoaded) {
+        return (
+            <header className="bg-white shadow sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+                    <div className="flex justify-between items-center py-2 sm:py-3 lg:py-4">
+                        <div className="flex items-center min-w-0 flex-1">
+                            <Monitor className="h-5 w-5 sm:h-7 sm:w-7 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
+                            <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                                Wake On Lan
+                            </h1>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="animate-pulse bg-gray-200 rounded-full h-7 w-7 sm:h-9 sm:w-9"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+        );
+    }
 
     if (!user) {
         router.push('/login');
+        return null;
     }
 
     return (
@@ -82,7 +132,11 @@ export const Navbar = () => {
                     <div className="flex items-center">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                                <Button
+                                    variant="ghost"
+                                    className="h-auto p-0 hover:bg-transparent"
+                                    disabled={isSigningOut || !isLoaded}
+                                >
                                     <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer">
                                         <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
                                             <AvatarImage
@@ -132,17 +186,29 @@ export const Navbar = () => {
                                 <DropdownMenuItem
                                     className="cursor-pointer text-blue-500 hover:!bg-blue-100 focus:!text-blue-600 focus:!bg-blue-100 py-2"
                                     onClick={() => router.push('/setting')}
+                                    disabled={isSigningOut || !isLoaded}
                                 >
                                     <Settings className="mr-3 h-4 w-4 text-blue-500 flex-shrink-0" />
                                     <span className="text-sm">設定</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    className="text-red-600 hover:!bg-red-100 focus:!text-red-600 cursor-pointer focus:!bg-red-100 py-2"
+                                    className={`text-red-600 hover:!bg-red-100 focus:!text-red-600 cursor-pointer focus:!bg-red-100 py-2 ${
+                                        isSigningOut || !isLoaded
+                                            ? 'opacity-50 cursor-not-allowed'
+                                            : ''
+                                    }`}
                                     onClick={handleLogout}
+                                    disabled={isSigningOut || !isLoaded}
                                 >
-                                    <LogOut className="mr-3 h-4 w-4 focus:!text-red-600 flex-shrink-0" />
-                                    <span className="text-sm">ログアウト</span>
+                                    {isSigningOut ? (
+                                        <Loader2 className="mr-3 h-4 w-4 animate-spin flex-shrink-0" />
+                                    ) : (
+                                        <LogOut className="mr-3 h-4 w-4 focus:!text-red-600 flex-shrink-0" />
+                                    )}
+                                    <span className="text-sm">
+                                        {isSigningOut ? 'ログアウト中...' : 'ログアウト'}
+                                    </span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

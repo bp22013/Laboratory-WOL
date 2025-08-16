@@ -2,13 +2,14 @@
 
 'use client';
 
+import { NextPage } from 'next';
 import { UserProfile } from '@clerk/nextjs';
 import { Navbar } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function Setting() {
+const SettingPage: NextPage = () => {
     const router = useRouter();
 
     return (
@@ -30,4 +31,6 @@ export default function Setting() {
             </main>
         </div>
     );
-}
+};
+
+export default SettingPage;
