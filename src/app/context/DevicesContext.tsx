@@ -1,5 +1,6 @@
 /* デバイス情報を保持するためのコンテキスト */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';

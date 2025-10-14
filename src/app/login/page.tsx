@@ -1,5 +1,6 @@
-/* Clerk認証対応ログインページ */
+/* ログインページ */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import type React from 'react';
@@ -71,10 +72,9 @@ const LoginPage: NextPage = () => {
                         console.log('Additional authentication required:', result);
                         reject('追加の認証が必要です。');
                     }
-                } catch (err: any) {
-                    console.error('Login error:', err);
-                    if (err.errors && err.errors.length > 0) {
-                        reject(err.errors[0].longMessage || '再度ログインしてください。');
+                } catch (error: any) {
+                    if (error.errors && error.errors.length > 0) {
+                        reject('再度ログインしてください。');
                     } else {
                         reject('再度ログインしてください。');
                     }

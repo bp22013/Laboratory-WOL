@@ -1,5 +1,6 @@
 /* デバイスを追加する関数 */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
@@ -35,14 +36,14 @@ export const addDevice = new Hono().post(
                 { success: true, message: 'デバイスを追加しました!', device: device },
                 200
             );
-        } catch (e: any) {
-            if (e.code === '23505') {
+        } catch (error: any) {
+            if (error.code === '23505') {
                 return c.json(
                     { success: false, message: '同じMACアドレスが既に登録されています' },
                     409
                 );
             }
-            console.error('デバイス追加エラー:', e);
+            console.error('デバイス追加エラー:', error);
             return c.json({ success: false, message: 'サーバーエラーが発生しました' }, 500);
         }
     }

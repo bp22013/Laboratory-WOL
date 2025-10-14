@@ -1,5 +1,6 @@
 /* 新規登録ページ */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import type React from 'react';
@@ -49,11 +50,7 @@ const SignUpPage: NextPage = () => {
         },
     });
 
-    const firstName = watch('firstName');
-    const lastName = watch('lastName');
     const email = watch('email');
-    const password = watch('password');
-    const confirmPassword = watch('confirmPassword');
 
     // 既にログイン済みの場合はリダイレクト
     useEffect(() => {

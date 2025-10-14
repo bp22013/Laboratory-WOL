@@ -19,6 +19,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import toast from 'react-hot-toast';
+import { UserResource } from '@clerk/types';
 
 export const Navbar = () => {
     const router = useRouter();
@@ -32,7 +33,7 @@ export const Navbar = () => {
         setMounted(true);
     }, []);
 
-    const getUserInitials = (user: any): string => {
+    const getUserInitials = (user: UserResource): string => {
         if (user?.firstName && user?.lastName) {
             return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
         }
@@ -52,7 +53,7 @@ export const Navbar = () => {
         return 'U';
     };
 
-    const getUserDisplayName = (user: any): string => {
+    const getUserDisplayName = (user: UserResource): string => {
         if (user?.fullName) {
             return user.fullName;
         }
@@ -82,7 +83,7 @@ export const Navbar = () => {
                         router.push('/login');
                     });
                     resolve('ログアウトしました');
-                } catch (error: any) {
+                } catch (error) {
                     console.error('Sign out error:', error);
                     reject('ログアウトに失敗しました');
                 } finally {

@@ -1,5 +1,6 @@
 /* パスワード再設定ページ */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import type React from 'react';
