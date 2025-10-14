@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Power, Edit, Trash2, Monitor } from 'lucide-react';
 import { DeviceForm } from '@/components/device-form';
 import { Navbar } from '@/components/navigation';
+import { client } from '@/lib/HonoClient';
 import toast from 'react-hot-toast';
 import { Loading, ButtonLoading } from '@/components/ui/loading';
 import { type Device } from '@/types/DeviceType';
@@ -29,11 +30,11 @@ const Dashboard: NextPage = () => {
     useEffect(() => {
         if (!isLoaded || !isUserLoaded) return;
         if (!isSignedIn || !userId) {
+            toast.error('再度ログインしてください');
             router.push('/');
         }
     }, [isLoaded, isUserLoaded, isSignedIn, userId, router]);
 
-    // デバイスデータ読み込み（Cloudflare KV から）
     useEffect(() => {
         (async () => {
             try {
@@ -48,28 +49,39 @@ const Dashboard: NextPage = () => {
         })();
     }, []);
 
+    // 起動シグナル送信用関数
     const handleWakeOnLan = async (device: Device) => {
         setIsLoading(true);
-        try {
-            const response = await fetch('/api/wol', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ macAddress: device.macAddress }),
-            });
 
-            if (response.ok) {
-                toast.success(`${device.name} への起動信号を送信しました`);
-                setDevices((prev) =>
-                    prev.map((d) => (d.id === device.id ? { ...d, isOnline: true } : d))
-                );
-            } else {
-                throw new Error('WOL送信に失敗');
+        toast.promise(
+            new Promise(async (resolve, reject) => {
+                try {
+                    const response = await client.api.wol.send.$post({
+                        json: { macAddress: device.macAddress },
+                    });
+
+                    const responseData = await response.json();
+
+                    if (response.ok && responseData.success) {
+                        resolve(`${device.name} への起動信号を送信しました！`);
+                        setDevices((prev) =>
+                            prev.map((d) => (d.id === device.id ? { ...d, isOnline: true } : d))
+                        );
+                    } else {
+                        reject(`WOL送信に失敗しました: ${responseData.message}`);
+                    }
+                } catch {
+                    toast.error('WOLパケットの送信に失敗しました');
+                } finally {
+                    setIsLoading(false);
+                }
+            }),
+            {
+                loading: '起動シグナルを送信しています...',
+                success: `${device.name} への起動信号を送信しました！`,
+                error: (message: string) => message,
             }
-        } catch {
-            toast.error('WOLパケットの送信に失敗しました');
-        } finally {
-            setIsLoading(false);
-        }
+        );
     };
 
     const handleSaveDevice = async (deviceData: Omit<Device, 'id'>) => {
