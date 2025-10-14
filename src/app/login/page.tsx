@@ -135,7 +135,7 @@ const LoginPage: NextPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center">ログイン</CardTitle>
@@ -221,7 +221,7 @@ const LoginPage: NextPage = () => {
                     <div className="space-y-2">
                         <Button
                             variant="outline"
-                            className="w-full"
+                            className="w-full cursor-pointer"
                             onClick={() => handleSocialLogin('oauth_google')}
                             disabled={isLoading}
                         >
@@ -230,7 +230,7 @@ const LoginPage: NextPage = () => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full"
+                            className="w-full cursor-pointer"
                             onClick={() => handleSocialLogin('oauth_slack')}
                             disabled={isLoading}
                         >
@@ -245,7 +245,7 @@ const LoginPage: NextPage = () => {
                         <span className="text-gray-600">アカウントをお持ちでない方は </span>
                         <Link
                             href="/sign-up"
-                            className="text-blue-600 hover:text-blue-500 font-medium"
+                            className="text-blue-600 hover:text-blue-500 font-medium cursor-pointer"
                         >
                             新規登録
                         </Link>

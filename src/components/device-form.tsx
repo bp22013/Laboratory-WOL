@@ -16,14 +16,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DeviceFormValues, deviceSchema } from '@/lib/validation';
 import { type Device } from '@/types/DeviceType';
 
 interface DeviceFormProps {
     device?: Device | null;
-    onSave: (device: Omit<Device, 'id'>) => Promise<void> | void;
+    onSave: (data: DeviceFormValues) => Promise<void> | void;
     onCancel: () => void;
 }
 
@@ -54,14 +54,18 @@ export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
         }
     }, [device, reset]);
 
+    const onFormError = (error: FieldErrors<DeviceFormValues>) => {
+        console.error('フォームのバリデーションに失敗しました:', error);
+    };
+
     const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
+        console.log('onSubmitが呼び出されました。フォームデータ:', data);
         setIsLoading(true);
         try {
-            await onSave({
-                name: data.name.trim(),
-                macAddress: data.macAddress.trim().toUpperCase(),
-                description: data.description?.trim() || '',
-            });
+            await onSave(data);
+            console.log('onSave関数が正常に完了しました。');
+        } catch (e) {
+            console.error('onSaveの実行中にエラーが発生しました:', e);
         } finally {
             setIsLoading(false);
         }
@@ -77,8 +81,8 @@ export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    {/* デバイス名 */}
+                <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
+                    {/* ...フォーム項目は変更なし... */}
                     <div className="space-y-2">
                         <Label htmlFor="name">デバイス名 *</Label>
                         <Input
@@ -91,8 +95,6 @@ export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
                             <p className="text-sm text-red-500">{errors.name.message}</p>
                         )}
                     </div>
-
-                    {/* MACアドレス */}
                     <div className="space-y-2">
                         <Label htmlFor="macAddress">MACアドレス *</Label>
                         <Input
@@ -108,14 +110,12 @@ export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
                             コロン(:)またはハイフン(-)区切りで入力してください
                         </p>
                     </div>
-
-                    {/* 説明 */}
                     <div className="space-y-2">
                         <Label htmlFor="description">説明（任意）</Label>
                         <Textarea
                             id="description"
                             disabled={isLoading}
-                            placeholder="例: リビングのデスクトップPC"
+                            placeholder="例: VIT1○○"
                             rows={3}
                             {...register('description')}
                         />
@@ -131,7 +131,11 @@ export const DeviceForm = ({ device, onSave, onCancel }: DeviceFormProps) => {
                         >
                             キャンセル
                         </Button>
-                        <Button type="submit" disabled={isLoading} className="cursor-pointer">
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="cursor-pointer bg-[#00BFFF]"
+                        >
                             {isLoading ? '処理中...' : device ? '更新' : '追加'}
                         </Button>
                     </DialogFooter>

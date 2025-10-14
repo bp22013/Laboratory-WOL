@@ -13,10 +13,10 @@ const SettingPage: NextPage = () => {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="flex flex-col min-h-screen overflow-y-scroll">
             <Navbar />
-            <main className="flex flex-1 flex-col items-center p-4">
-                <div className="w-full max-w-4xl mb-4">
+            <main className="flex flex-1 flex-col items-center p-4 sm:p-6">
+                <div className="w-full max-w-4xl mb-6">
                     <Button
                         variant="outline"
                         className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 cursor-pointer"

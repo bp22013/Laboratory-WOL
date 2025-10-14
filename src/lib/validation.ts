@@ -17,21 +17,11 @@ export type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 // デバイス登録フォームのバリデーションスキーマ定義
 export const deviceSchema = z.object({
-    name: z.string().min(1, 'デバイス名は必須です'),
+    name: z.string().nonempty('デバイス名は必須です'),
     macAddress: z
         .string()
         .nonempty('MACアドレスは必須です')
-        .regex(
-            /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
-            'MACアドレスの形式が正しくありません (例: 00:11:22:33:44:55)'
-        ),
-    ipAddress: z
-        .string()
-        .nonempty('IPアドレスは必須です')
-        .regex(
-            /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-            'IPアドレスの形式が正しくありません'
-        ),
+        .regex(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/, '無効なMACアドレス形式です'),
     description: z.string().optional(),
 });
 

@@ -5,13 +5,11 @@ import { NextResponse } from 'next/server';
 
 // パブリックルート（認証不要）の定義
 const isPublicRoute = createRouteMatcher([
-    '/login(.*)', // /loginも追加
-    '/dashboard',
-    '/setting',
-    '/sign-up',
+    '/login(.*)',
+    '/sign-up(.*)',
     '/forgot-password(.*)',
-    '/sso-callback(.*)', // SSOコールバック
-    '/', // ランディングページ（必要に応じて）
+    '/sso-callback(.*)',
+    '/',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

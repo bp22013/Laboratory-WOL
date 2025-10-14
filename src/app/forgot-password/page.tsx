@@ -56,32 +56,43 @@ const ForgotPasswordPage: NextPage = () => {
 
         setIsLoading(true);
 
-        try {
-            const result = await signIn.create({
-                strategy: 'reset_password_email_code',
-                identifier: data.email,
-            });
+        toast.promise(
+            new Promise<string>(async (resolve, reject) => {
+                try {
+                    const result = await signIn.create({
+                        strategy: 'reset_password_email_code',
+                        identifier: data.email,
+                    });
 
-            if (result.status === 'needs_first_factor') {
-                setEmail(data.email);
-                setStep('reset');
-                toast.success('パスワードリセット用のメールを送信しました。');
-            }
-        } catch (err: any) {
-            console.error('Password reset request error:', err);
-            if (err.errors && err.errors.length > 0) {
-                const errorMessage = err.errors[0].longMessage || err.errors[0].message;
-                if (errorMessage.includes('not found') || errorMessage.includes('見つかりません')) {
-                    toast.error('このメールアドレスは登録されていません。');
-                } else {
-                    toast.error(errorMessage);
+                    if (result.status === 'needs_first_factor') {
+                        setEmail(data.email);
+                        setStep('reset');
+                        resolve('パスワードリセット用のメールを送信しました。');
+                    }
+                } catch (err: any) {
+                    if (err.errors && err.errors.length > 0) {
+                        const errorMessage = err.errors[0].longMessage || err.errors[0].message;
+                        if (
+                            errorMessage.includes('not found') ||
+                            errorMessage.includes('見つかりません')
+                        ) {
+                            reject('このメールアドレスは登録されていません。');
+                        } else {
+                            reject(errorMessage);
+                        }
+                    } else {
+                        reject('エラーが発生しました。再度お試しください。');
+                    }
+                } finally {
+                    setIsLoading(false);
                 }
-            } else {
-                toast.error('エラーが発生しました。再度お試しください。');
+            }),
+            {
+                loading: '送信中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
             }
-        } finally {
-            setIsLoading(false);
-        }
+        );
     };
 
     // パスワードのリセット実行
@@ -90,36 +101,47 @@ const ForgotPasswordPage: NextPage = () => {
 
         setIsLoading(true);
 
-        try {
-            const result = await signIn.attemptFirstFactor({
-                strategy: 'reset_password_email_code',
-                code: data.code,
-                password: data.password,
-            });
+        toast.promise(
+            new Promise<string>(async (resolve, reject) => {
+                try {
+                    const result = await signIn.attemptFirstFactor({
+                        strategy: 'reset_password_email_code',
+                        code: data.code,
+                        password: data.password,
+                    });
 
-            if (result.status === 'complete') {
-                setStep('success');
-                toast.success('パスワードが正常にリセットされました。');
-            } else {
-                toast.error('認証に失敗しました。再度お試しください。');
-            }
-        } catch (err: any) {
-            console.error('Password reset error:', err);
-            if (err.errors && err.errors.length > 0) {
-                const errorMessage = err.errors[0].longMessage || err.errors[0].message;
-                if (errorMessage.includes('invalid') || errorMessage.includes('incorrect')) {
-                    toast.error('認証コードが正しくありません。');
-                } else if (errorMessage.includes('expired')) {
-                    toast.error('認証コードの有効期限が切れています。');
-                } else {
-                    toast.error(errorMessage);
+                    if (result.status === 'complete') {
+                        setStep('success');
+                        resolve('パスワードが正常にリセットされました。');
+                    } else {
+                        reject('認証に失敗しました。再度お試しください。');
+                    }
+                } catch (err: any) {
+                    if (err.errors && err.errors.length > 0) {
+                        const errorMessage = err.errors[0].longMessage || err.errors[0].message;
+                        if (
+                            errorMessage.includes('invalid') ||
+                            errorMessage.includes('incorrect')
+                        ) {
+                            reject('認証コードが正しくありません。');
+                        } else if (errorMessage.includes('expired')) {
+                            reject('認証コードの有効期限が切れています。');
+                        } else {
+                            reject(errorMessage);
+                        }
+                    } else {
+                        reject('エラーが発生しました。再度お試しください。');
+                    }
+                } finally {
+                    setIsLoading(false);
                 }
-            } else {
-                toast.error('エラーが発生しました。再度お試しください。');
+            }),
+            {
+                loading: '実行中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
             }
-        } finally {
-            setIsLoading(false);
-        }
+        );
     };
 
     // メール再送信
@@ -128,18 +150,26 @@ const ForgotPasswordPage: NextPage = () => {
 
         setIsLoading(true);
 
-        try {
-            await signIn.create({
-                strategy: 'reset_password_email_code',
-                identifier: email,
-            });
-            toast.success('認証メールを再送信しました。');
-        } catch (err: any) {
-            console.error('Resend email error:', err);
-            toast.error('メールの再送信に失敗しました。');
-        } finally {
-            setIsLoading(false);
-        }
+        toast.promise(
+            new Promise<string>(async (resolve, reject) => {
+                try {
+                    await signIn.create({
+                        strategy: 'reset_password_email_code',
+                        identifier: email,
+                    });
+                    resolve('認証メールを再送信しました。');
+                } catch (error: any) {
+                    reject(`メールの再送信に失敗しました: ${error}`);
+                } finally {
+                    setIsLoading(false);
+                }
+            }),
+            {
+                loading: '送信中...',
+                success: (message: string) => message,
+                error: (message: string) => message,
+            }
+        );
     };
 
     // フィールドクリア関数

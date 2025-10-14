@@ -5,8 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1760417039488,
-      "tag": "0000_stiff_arclight",
+      "when": 1760443607810,
+      "tag": "0000_overconfident_annihilus",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760444519025,
+      "tag": "0001_giant_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760456594565,
+      "tag": "0002_rare_shockwave",
       "breakpoints": true
     }
   ]

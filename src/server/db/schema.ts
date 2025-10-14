@@ -1,24 +1,33 @@
 /* データベースのスキーマ */
 
-import { pgTable, serial, text, varchar, integer, uniqueIndex } from 'drizzle-orm/pg-core';
-
-export const wolQueue = pgTable('wol_queue', {
-    id: serial('id').primaryKey(),
-    macAddress: varchar('mac_address', { length: 17 }).notNull(),
-    createdAt: integer('created_at').notNull(),
+import { pgTable, text, varchar, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+export const users = pgTable('users', {
+    id: text('id').primaryKey(),
+    name: text('name'),
+    email: text('email').notNull(),
 });
 
 export const devices = pgTable(
     'devices',
     {
-        id: serial('id').primaryKey(),
+        id: uuid('id')
+            .primaryKey()
+            .$defaultFn(() => crypto.randomUUID()),
+
+        userId: text('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+
         name: text('name').notNull(),
         macAddress: varchar('mac_address', { length: 17 }).notNull(),
-        createdAt: integer('created_at').notNull(),
+        description: text('description'),
+        createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp('updated_at', { withTimezone: true })
+            .notNull()
+            .defaultNow()
+            .$onUpdate(() => new Date()),
     },
-    (table) => {
-        return {
-            macAddressIdx: uniqueIndex('mac_address_idx').on(table.macAddress),
-        };
-    }
+    (table) => ({
+        userMacAddressIdx: uniqueIndex('user_mac_address_idx').on(table.userId, table.macAddress),
+    })
 );
