@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Laboratory-WOL
 
-## Getting Started
+これは、Wake-on-LAN (WoL) のマジックパケットを送信し、リモートでデバイスを起動させるための Web アプリケーションです。ユーザー認証機能を備え、ダッシュボードから簡単に対象デバイスの管理・操作ができます。
 
-First, run the development server:
+## ✨ 主な機能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+-   **ユーザー認証**: Clerk を利用した安全なサインアップ、サインイン機能。
+-   **デバイス管理**: 起動したいデバイスの登録、編集、削除 (CRUD)。
+-   **Wake-on-LAN**: 登録したデバイスに対してマジックパケットを送信し、リモートで起動。
+-   **ダッシュボード**: 登録済みデバイスの一覧表示と管理。
+-   **レスポンシブデザイン**: PC、スマートフォン、タブレットなど各種デバイスに対応。
+-   **テーマ切り替え**: ライトモードとダークモードの切り替え機能。
+
+## 🛠️ 使用技術
+
+-   **フレームワーク**: [Next.js](https://nextjs.org/) (App Router)
+-   **言語**: [TypeScript](https://www.typescriptlang.org/)
+-   **バックエンド API**: [Hono](https://hono.dev/)
+-   **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+-   **データベース**: [Neon](https://neon.tech/) (PostgreSQL)
+-   **認証**: [Clerk](https://clerk.com/)
+-   **UI**: [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
+-   **フォーム管理**: [React Hook Form](https://react-hook-form.com/), [Zod](https://zod.dev/)
+-   **データ取得**: [SWR](https://swr.vercel.app/)
+
+## 🚀 セットアップ手順
+
+1.  **リポジトリをクローン**:
+
+    ```bash
+    git clone https://github.com/your-username/Laboratory-WOL.git
+    cd Laboratory-WOL
+    ```
+
+2.  **依存関係をインストール**:
+    プロジェクトルートには `bun.lock` ファイルが存在するため、`bun` の利用を推奨します。
+
+    ```bash
+    bun install
+    ```
+
+3.  **環境変数を設定**:
+    `.env.local.example` ファイルを参考に `.env` ファイルを作成し、Clerk やデータベースの接続情報などを設定してください。
+
+    `.env.local.example`
+
+    ```
+    # Clerk
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+    CLERK_SECRET_KEY=
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+
+    # Database (Neon)
+    DATABASE_URL=
+    ```
+
+4.  **データベースのマイグレーション**:
+    Drizzle Kit を使用して、スキーマをデータベースに反映させます。
+
+    ```bash
+    bun drizzle-kit push:pg
+    ```
+
+5.  **開発サーバーを起動**:
+    ```bash
+    bun run next dev
+    ```
+    [http://localhost:3000](http://localhost:3000) にアクセスしてアプリケーションを表示します。
+
+## 📜 利用可能なスクリプト
+
+-   `bun run next dev`: 開発モードでアプリケーションを起動します。
+-   `bun run next build`: プロダクション用にアプリケーションをビルドします。
+-   `bun run next start`: ビルドされたプロダクションサーバーを起動します。
+-   `bun run next lint`: ESLint を使用してコードの静的解析を実行します。
+
+## 📁 ディレクトリ構成
+
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+.
+├── src
+│   ├── app/              # Next.js App Router のメインディレクトリ
+│   │   ├── (auth)/       # 認証関連ページ (ログイン、サインアップなど)
+│   │   ├── dashboard/    # メインのダッシュボードページ
+│   │   ├── api/          # Hono を使った API ルート
+│   │   └── layout.tsx    # アプリケーションの共通レイアウト
+│   ├── components/       # UIコンポーネント (shadcn/ui を含む)
+│   ├── lib/              # ヘルパー関数、クライアント、Context など
+│   └── server/           # サーバーサイドのロジック
+│       ├── db/           # Drizzle ORM のスキーマ、マイグレーション
+│       └── route/        # Hono のルーティング定義
+└── ...
+```
