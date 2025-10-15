@@ -8,12 +8,37 @@ import { Navbar } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 
 const SettingPage: NextPage = () => {
     const router = useRouter();
+    const [isScrollable, setIsScrollable] = useState(false);
+
+    useEffect(() => {
+        const checkScrollable = () => {
+            const hasScroll = document.body.scrollHeight > window.innerHeight;
+            setIsScrollable(hasScroll);
+        };
+
+        // 初期チェック
+        checkScrollable();
+
+        // リサイズ時に再チェック
+        window.addEventListener('resize', checkScrollable);
+
+        return () => {
+            window.removeEventListener('resize', checkScrollable);
+        };
+    }, []);
 
     return (
-        <div className="flex flex-col min-h-screen overflow-y-scroll">
+        <div
+            className={clsx(
+                'flex flex-col min-h-screen',
+                isScrollable ? 'overflow-y-scroll' : 'overflow-y-hidden'
+            )}
+        >
             <Navbar />
             <main className="flex flex-1 flex-col items-center p-4 sm:p-6">
                 <div className="w-full max-w-4xl mb-6">
